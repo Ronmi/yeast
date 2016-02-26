@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <title>Nginx manager</title>
+    <meta charset="utf8"/>
+  </head>
+  <body>
+    <h3>Add new mapping</h3>
+    <form action="/add">
+      <table border="0">
+        <tr>
+          <th>Server Name</th>
+          <td><input name="name" type="text"/></td>
+        </tr>
+        <tr>
+          <th>Path</th>
+          <td><input name="path" type="text"/></td>
+        </tr>
+        <tr>
+          <th>Upstream</th>
+          <td><input name="upstream" type="text"/></td>
+        </tr>
+        <tr>
+          <th></th>
+          <td><input type="submit" value="Add"/></td>
+        </tr>
+      </table>
+    </form>
+    <hr />
+    <table border="0" cellpadding="5" cellspacing="10">
+      <tr>
+        <th>Server Name</th>
+        <th>URL Path</th>
+        <th>Upstream</th>
+        <th>Action</th>
+      </tr>
+      {{range $name, $server := .}}
+      {{range $path, $mapping := $server}}
+      <tr>
+        <td>{{$name}}</td>
+        <td>{{$path}}</td>
+        <td>{{$mapping.Upstream}}</td>
+        <td>
+          <a href="/del?name={{$name}}&path={{$path}}">Delete</a>
+          {{if $mapping.Enabled}}
+          <a href="/disable?name={{$name}}&path={{$path}}">Disable</a>
+          {{else}}
+          <a href="/enable?name={{$name}}&path={{$path}}">Enable</a>
+          {{end}}
+        </td>
+      </tr>
+      {{end}}
+      {{end}}
+    </table>
+  </body>
+</html>
