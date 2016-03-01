@@ -29,8 +29,9 @@ func (c *nginxConf) export() string {
 
 // Mapping is base structure of path-upstream mapping
 type Mapping struct {
-	Upstream string `json:"upstream"`
-	Enabled  bool   `json:"-"`
+	Upstream   string `json:"upstream"`
+	CustomTags string `json:"custom_tags"`
+	Enabled    bool   `json:"-"`
 }
 
 // NginxServer represents server segment of nginx conf
@@ -52,11 +53,11 @@ func NewServer(name string) *NginxServer {
 }
 
 // Set path => upstream mapping
-func (s *NginxServer) Set(path, upstream string) {
+func (s *NginxServer) Set(path, upstream, custom string) {
 	s.Lock()
 	defer s.Unlock()
 
-	s.Paths[path] = &Mapping{upstream, true}
+	s.Paths[path] = &Mapping{upstream, custom, true}
 	s.length++
 }
 
@@ -141,6 +142,7 @@ func (s *NginxServer) Export() string {
 		ret.indent("location "+path+" {", 1)
 		ret.indent("proxy_pass "+mapping.Upstream+";", 2)
 		ret.indent("include proxy_params;", 2)
+		ret.indent(mapping.CustomTags, 2)
 		ret.indent("}", 1)
 		ret.add("")
 	}

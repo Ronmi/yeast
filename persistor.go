@@ -117,12 +117,12 @@ func (p *Persistor) getServer(name string) *NginxServer {
 }
 
 // Set path to upstream mapping
-func (p *Persistor) Set(name, path, upstream string) {
+func (p *Persistor) Set(name, path, upstream, custom string) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
 
-	p.getServer(name).Set(path, upstream)
+	p.getServer(name).Set(path, upstream, custom)
 }
 
 // Unset a path-upstream mapping

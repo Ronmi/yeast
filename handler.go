@@ -37,13 +37,14 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	path := r.FormValue("path")
 	upstream := r.FormValue("upstream")
+	custom := r.FormValue("custom")
 
 	if upstream == "" || path == "" {
 		h.err(w, "Path and Upstream cannot be empty string!")
 		return
 	}
 
-	h.Persistor.Set(name, path, upstream)
+	h.Persistor.Set(name, path, upstream, custom)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
