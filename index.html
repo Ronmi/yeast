@@ -2,54 +2,162 @@
   <head>
     <title>Nginx manager</title>
     <meta charset="utf8"/>
+    <style type="text/css">
+* {
+  box-sizing: border-box;
+}
+.container {
+  background-color: white;
+  padding: 15px;
+  filter: drop-shadow(3px 3px 3px grey);
+  margin: 10px;
+}
+.mappings { min-width: 465px; width: 90%; margin: 0px auto; }
+.item {
+  width: 300px;
+  height: 256px;
+  padding: 15px;
+  margin: 10px;
+}
+.title {
+  font-weight: bold;
+  width: 110px;
+  display: inline-block;
+  vertical-align: top;
+}
+.value {
+  margin-left: 10px;
+}
+.title::after {
+  content: ":";
+  font-weight: bold;
+}
+ul {
+  list-style-type: none;
+  list-style-position: inside;
+  padding: 0;
+  clear: both;
+}
+li { float: left; }
+ul::after { content: ""; clear:both; display: block; }
+.custom>code {
+  font-family: monospace;
+  white-space: pre;
+  word-wrap: normal;
+  display: inline-block;
+  height: 118px;
+  width: 150px;
+  overflow: auto;
+}
+.button {
+  border: none;
+  color: white;
+  padding: 15px 30px;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 8px 2px;
+}
+.actions { text-align: center; }
+.del {
+  background-color: red;
+}
+.enable {
+  background-color: #999999;
+}
+.disable {
+  background-color: green;
+}
+.server {
+  padding: 20px;
+  clear: both;
+}
+.server>.caption {
+  clear: both;
+}
+.server>.caption>span {
+  background-color: white;
+  padding: 0px 5px;
+  font-weight: bold;
+}
+form { vertical-align: top; }
+form>div {
+  display: inline-block;
+  vertical-align: top;
+  margin: 10px;
+}
+    </style>
   </head>
   <body>
-    <h3>Add new mapping</h3>
-    <form action="/add">
-      <table border="0">
-        <tr>
-          <th>Server Name</th>
-          <td><input name="name" type="text"/></td>
-        </tr>
-        <tr>
-          <th>Path</th>
-          <td><input name="path" type="text"/></td>
-        </tr>
-        <tr>
-          <th>Upstream</th>
-          <td><input name="upstream" type="text"/></td>
-        </tr>
-        <tr>
-          <th></th>
-          <td><input type="submit" value="Add"/></td>
-        </tr>
-      </table>
-    </form>
-    <hr />
-    <table border="0" cellpadding="5" cellspacing="10">
-      <tr>
-        <th>Server Name</th>
-        <th>URL Path</th>
-        <th>Upstream</th>
-        <th>Action</th>
-      </tr>
+    <div class="mappings">
+      <div class="container">
+        <h3>Add new mapping</h3>
+        <form action="/add">
+          <div>
+            <span class="title">Server Name</span>
+            <span class="value"><input name="name" type="text"/></span>
+          </div>
+          <div>
+            <span class="title">Path</span>
+            <span class="value"><input name="path" type="text"/></span>
+          </div>
+          <div>
+            <span class="title">Upstream</span>
+            <span class="value"><input name="upstream" type="text"/></span>
+          </div>
+          <div>
+            <span class="title">Custom Tags</span>
+            <span class="value"><textarea name="custom"></textarea></span>
+          </div>
+          <div>
+            <input type="submit" value="Add"/>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="mappings">
       {{range $name, $server := .}}
-      {{range $path, $mapping := $server}}
-      <tr>
-        <td>{{$name}}</td>
-        <td>{{$path}}</td>
-        <td>{{$mapping.Upstream}}</td>
-        <td>
-          <a href="/del?name={{$name}}&path={{$path}}">Delete</a>
-          {{if $mapping.Enabled}}
-          <a href="/disable?name={{$name}}&path={{$path}}">Disable</a>
-          {{else}}
-          <a href="/enable?name={{$name}}&path={{$path}}">Enable</a>
-          {{end}}
-        </td>
-      </tr>
+      <div class="container">
+        <div class="server">
+          <h3 class="caption">
+            <span>Server</span>
+            <span>{{if $name}}{{$name}}{{else}}DEFAULT{{end}}</span>
+          </h3>
+          <ul>
+            {{range $path, $mapping := $server}}
+            <li>
+              <div class="container">
+                <div class="item">
+                  <div class="path">
+                    <span class="title">Path</span>
+                    <span class="value">{{$path}}</span>
+                  </div>
+                  <div class="upstream">
+                    <span class="title">Upstream</span>
+                    <span class="value">{{$mapping.Upstream}}</span>
+                  </div>
+                  <div class="custom">
+                    <span class="title">Custom Tags</span>
+                    <code>{{$mapping.CustomTags}}</code>
+                  </div>
+                  <div class="actions">
+                    {{if $mapping.Enabled}}
+                    <a class="disable button" href="/disable?name={{$name}}&path={{$path}}">Disable</a>
+                    {{else}}
+                    <a class="enable button" href="/enable?name={{$name}}&path={{$path}}">Enable</a>
+                    {{end}}
+                    <a class="del button" href="/del?name={{$name}}&path={{$path}}">Delete</a>
+                  </div>
+                </div>
+              </div>
+            </li>
+            {{end}}
+          </ul>
+        </div>
+      </div>
       {{end}}
-      {{end}}
-    </table>
+    </div>
   </body>
 </html>
