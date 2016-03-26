@@ -100,6 +100,9 @@ func (p *Persistor) Load() (err error) {
 	p.servers = map[string]*NginxServer{}
 	for _, srv := range buf {
 		srv := srv
+		for _, mapping := range srv.Paths {
+			mapping.Enabled = false
+		}
 		p.servers[srv.ServerName] = &srv
 	}
 
@@ -117,16 +120,16 @@ func (p *Persistor) getServer(name string) *NginxServer {
 }
 
 // Set path to upstream mapping
-func (p *Persistor) Set(name, path, upstream, custom string) {
+func (p *Persistor) Set(name, path, upstream, custom string) (ret *NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
 
-	p.getServer(name).Set(path, upstream, custom)
+	return p.getServer(name).Set(path, upstream, custom)
 }
 
 // Unset a path-upstream mapping
-func (p *Persistor) Unset(name, path string) {
+func (p *Persistor) Unset(name, path string) (ok bool) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
@@ -136,7 +139,9 @@ func (p *Persistor) Unset(name, path string) {
 
 	if s.Len() < 1 {
 		delete(p.servers, name)
+		ok = true
 	}
+	return
 }
 
 // Enable a mapping

@@ -31,7 +31,7 @@ func (c *nginxConf) export() string {
 type Mapping struct {
 	Upstream   string `json:"upstream"`
 	CustomTags string `json:"custom_tags"`
-	Enabled    bool   `json:"-"`
+	Enabled    bool   `json:"enabled"`
 }
 
 // NginxServer represents server segment of nginx conf
@@ -53,12 +53,19 @@ func NewServer(name string) *NginxServer {
 }
 
 // Set path => upstream mapping
-func (s *NginxServer) Set(path, upstream, custom string) {
+func (s *NginxServer) Set(path, upstream, custom string) (ret *NginxServer) {
 	s.Lock()
 	defer s.Unlock()
 
-	s.Paths[path] = &Mapping{upstream, custom, true}
+	ret = &NginxServer{
+		ServerName: s.ServerName,
+		Paths: map[string]*Mapping{
+			path: &Mapping{upstream, custom, true},
+		},
+	}
+	s.Paths[path] = ret.Paths[path]
 	s.length++
+	return
 }
 
 // Unset path => upstream mapping
