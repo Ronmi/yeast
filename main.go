@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"text/template"
 )
 
 func main() {
@@ -12,10 +12,12 @@ func main() {
 		data   string
 		port   string
 		ngconf string
+		fend   string
 	)
 	flag.StringVar(&data, "data", "/var/lib/cheesecake/data.json", "path to store mapping")
 	flag.StringVar(&port, "addr", ":8080", "address to listen")
 	flag.StringVar(&ngconf, "conf", "/etc/nginx/sites-enabled/default", "path to nginx config")
+	flag.StringVar(&fend, "fe", "index.html", "Path to frontend file")
 	flag.Parse()
 
 	p := NewPersistor(data, ngconf)
@@ -23,17 +25,20 @@ func main() {
 		log.Fatalf("Cannot load data from %s: %s", data, err)
 	}
 
-	tmpl, err := template.ParseFiles("index.html")
+	tmpl, err := ioutil.ReadFile(fend)
 	if err != nil {
-		log.Fatalf("Cannot load template: %s", err)
+		log.Fatalf("Cannot read frontend file from %s: %s", fend, err)
 	}
 
-	h := Handler{p, tmpl}
-	http.HandleFunc("/", h.Index)
-	http.HandleFunc("/add", h.Add)
-	http.HandleFunc("/del", h.Delete)
-	http.HandleFunc("/enable", h.Enable)
-	http.HandleFunc("/disable", h.Disable)
+	h := Handler{p}
+	http.HandleFunc("/api/list", h.List)
+	http.HandleFunc("/api/set", h.Set)
+	http.HandleFunc("/api/unset", h.Unset)
+	http.HandleFunc("/api/enable", h.Enable)
+	http.HandleFunc("/api/disable", h.Disable)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(tmpl))
+	})
 
 	log.Fatal(http.ListenAndServe(port, nil))
 }
