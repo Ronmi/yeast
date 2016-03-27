@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 )
 
 func main() {
@@ -33,7 +34,13 @@ func main() {
 		log.Fatalf("Cannot read frontend file from %s: %s", fend, err)
 	}
 
-	h := Handler{p}
+	h := Handler{
+		p,
+		func() bool {
+			cmd := exec.Command("nginx", "-s", "reload")
+			return cmd.Run() == nil
+		},
+	}
 	http.HandleFunc("/api/list", h.List)
 	http.HandleFunc("/api/set", h.Set)
 	http.HandleFunc("/api/unset", h.Unset)

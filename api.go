@@ -10,18 +10,21 @@ import (
 
 // Handler handles all api calls
 type Handler struct {
-	Persistor *Persistor
+	Persistor   *Persistor
+	ReloadNginx func() bool // reload nginx, return true if success
 }
 
 // List lists all known mapping data
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	data := h.Persistor.List()
-
-	if len(data) == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("No data"))
+	buf, err := json.Marshal(data)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot serialize data to json format."))
 		return
 	}
+
+	w.Write(buf)
 }
 
 // Set add or overwrite a mapping data
@@ -47,6 +50,12 @@ func (h *Handler) Set(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !h.ReloadNginx() {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot reload Nginx."))
+		return
+	}
+
 	w.Write(buf)
 }
 
@@ -68,6 +77,13 @@ func (h *Handler) Unset(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("No such data"))
 		return
 	}
+
+	if !h.ReloadNginx() {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot reload Nginx."))
+		return
+	}
+
 }
 
 // Enable enables some of known data
@@ -83,6 +99,12 @@ func (h *Handler) Enable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Cannot serialize data to json format."))
+		return
+	}
+
+	if !h.ReloadNginx() {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot reload Nginx."))
 		return
 	}
 
@@ -102,6 +124,12 @@ func (h *Handler) Disable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Cannot serialize data to json format."))
+		return
+	}
+
+	if !h.ReloadNginx() {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot reload Nginx."))
 		return
 	}
 

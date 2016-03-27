@@ -226,14 +226,13 @@ func (p *Persistor) disableAll() (ret []*NginxServer) {
 }
 
 // List all server and mappings
-func (p *Persistor) List() (ret map[string]map[string]*Mapping) {
-	ret = map[string]map[string]*Mapping{}
+func (p *Persistor) List() (ret []*NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 
-	for name, srv := range p.servers {
-		ret[name] = srv.List()
+	ret = make([]*NginxServer, 0, len(p.servers))
+	for _, srv := range p.servers {
+		ret = append(ret, srv)
 	}
-
 	return
 }
