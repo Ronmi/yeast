@@ -1,0 +1,11 @@
+Copyright 2016 Ronmi Ren <ronmi@patrolavia.com>,
+               Fraina Huang <fraina@patrolavia.com>
+
+Yeast is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Yeast is distributed under terms of MIT, GPL and LGPL. You
+can freely choose any of them, and you MUST EXPLICITLY CLAIM
+IT. GPLv3 is used if you did not explicitly claim a correct
+MIT, GPL or LGPL license

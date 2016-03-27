@@ -1,3 +1,6 @@
+// This file is part of Yeast
+// Yeast is free software: see LICENSE.txt for more details.
+
 package main
 
 import (
