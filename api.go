@@ -48,8 +48,8 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]*NginxServer{
-		res.ServerName: res,
+	data := map[string]map[string]*Mapping{
+		res.ServerName: res.Paths,
 	}
 	buf, err := json.Marshal(data)
 	if err != nil {
@@ -89,8 +89,8 @@ func (h *Handler) Modify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]*NginxServer{
-		res.ServerName: res,
+	data := map[string]map[string]*Mapping{
+		res.ServerName: res.Paths,
 	}
 	buf, err := json.Marshal(data)
 	if err != nil {
@@ -134,8 +134,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]*NginxServer{
-		res.ServerName: res,
+	data := map[string]map[string]*Mapping{
+		res.ServerName: res.Paths,
 	}
 	buf, err := json.Marshal(data)
 	if err != nil {
@@ -153,8 +153,12 @@ func (h *Handler) Enable(w http.ResponseWriter, r *http.Request) {
 	name := r.PostFormValue("name")
 	path := r.PostFormValue("path")
 
-	data := h.Persistor.Enable(name, path)
+	res := h.Persistor.Enable(name, path)
 
+	data := map[string]map[string]*Mapping{}
+	for k, v := range res {
+		data[k] = v.Paths
+	}
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -178,8 +182,12 @@ func (h *Handler) Disable(w http.ResponseWriter, r *http.Request) {
 	name := r.PostFormValue("name")
 	path := r.PostFormValue("path")
 
-	data := h.Persistor.Disable(name, path)
+	res := h.Persistor.Disable(name, path)
 
+	data := map[string]map[string]*Mapping{}
+	for k, v := range res {
+		data[k] = v.Paths
+	}
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
