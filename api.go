@@ -42,12 +42,15 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := h.Persistor.Create(name, path, upstream, custom)
-	if data == nil {
+	res := h.Persistor.Create(name, path, upstream, custom)
+	if res == nil {
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
 
+	data := map[string]*NginxServer{
+		res.ServerName: res,
+	}
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -80,12 +83,15 @@ func (h *Handler) Modify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := h.Persistor.Modify(name, path, newPath, upstream, custom)
-	if data == nil {
+	res := h.Persistor.Modify(name, path, newPath, upstream, custom)
+	if res == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	data := map[string]*NginxServer{
+		res.ServerName: res,
+	}
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
