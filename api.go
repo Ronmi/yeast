@@ -16,7 +16,11 @@ type Handler struct {
 
 // List lists all known mapping data
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	data := h.Persistor.List()
+	res := h.Persistor.List()
+	data := map[string]map[string]*Mapping{}
+	for k, v := range res {
+		data[k] = v.Paths
+	}
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
