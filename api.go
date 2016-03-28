@@ -121,8 +121,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := h.Persistor.Delete(name, path)
-	if data == nil {
+	res := h.Persistor.Delete(name, path)
+	if res == nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("No such data"))
 		return
@@ -134,6 +134,9 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data := map[string]*NginxServer{
+		res.ServerName: res,
+	}
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
