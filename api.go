@@ -34,7 +34,7 @@ func (h *Handler) Set(w http.ResponseWriter, r *http.Request) {
 	name := r.PostFormValue("name")
 	path := r.PostFormValue("path")
 	upstream := r.PostFormValue("upstream")
-	custom := r.PostFormValue("custom")
+	custom := r.PostFormValue("custom_tags")
 
 	if name == "" || path == "" || upstream == "" {
 		w.WriteHeader(http.StatusBadRequest)
