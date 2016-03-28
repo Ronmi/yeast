@@ -25,8 +25,8 @@ func TestNginxExportNoname(t *testing.T) {
 }`
 
 	s := NewServer("")
-	s.Set("/b/", "http://b", "custom_tag 123;")
-	s.Set("/a/", "http://a", "")
+	s.Create("/b/", "http://b", "custom_tag 123;")
+	s.Create("/a/", "http://a", "")
 	actual := s.Export()
 
 	if actual != expect {
@@ -54,8 +54,8 @@ func TestNginxExport(t *testing.T) {
 }`
 
 	s := NewServer("example.com")
-	s.Set("/b/", "http://b", "custom_tag 123;")
-	s.Set("/a/", "http://a", "")
+	s.Create("/b/", "http://b", "custom_tag 123;")
+	s.Create("/a/", "http://a", "")
 	actual := s.Export()
 
 	if actual != expect {

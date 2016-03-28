@@ -55,29 +55,45 @@ func NewServer(name string) *NginxServer {
 	}
 }
 
-// Set path => upstream mapping
-func (s *NginxServer) Set(path, upstream, custom string) (ret *NginxServer) {
+// Create new path => upstream mapping
+func (s *NginxServer) Create(path, upstream, custom string) (ok bool) {
 	s.Lock()
 	defer s.Unlock()
 
-	ret = &NginxServer{
-		ServerName: s.ServerName,
-		Paths: map[string]*Mapping{
-			path: &Mapping{upstream, custom, true},
-		},
+	if _, ok := s.Paths[path]; ok {
+		return false
 	}
-	s.Paths[path] = ret.Paths[path]
+
+	s.Paths[path] = &Mapping{upstream, custom, true}
 	s.length++
-	return
+	return true
 }
 
-// Unset path => upstream mapping
-func (s *NginxServer) Unset(path string) {
+// Modify existing path => upstream mapping
+func (s *NginxServer) Modify(path, newPath, upstream, custom string) (ok bool) {
 	s.Lock()
 	defer s.Unlock()
 
+	if _, ok := s.Paths[path]; !ok {
+		return false
+	}
+
 	delete(s.Paths, path)
-	s.length--
+	s.Paths[newPath] = &Mapping{upstream, custom, true}
+	return true
+}
+
+// Delete path => upstream mapping
+func (s *NginxServer) Delete(path string) (ok bool) {
+	s.Lock()
+	defer s.Unlock()
+
+	_, ok = s.Paths[path]
+	delete(s.Paths, path)
+	if ok {
+		s.length--
+	}
+	return
 }
 
 // Disable a mapping, but not deleting it. noop if not found
