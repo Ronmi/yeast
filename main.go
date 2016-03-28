@@ -17,11 +17,13 @@ func main() {
 		port   string
 		ngconf string
 		fend   string
+		debug  bool
 	)
 	flag.StringVar(&data, "data", "/var/lib/cheesecake/data.json", "path to store mapping")
 	flag.StringVar(&port, "addr", ":8080", "address to listen")
 	flag.StringVar(&ngconf, "conf", "/etc/nginx/sites-enabled/default", "path to nginx config")
 	flag.StringVar(&fend, "fe", "index.html", "Path to frontend file")
+	flag.BoolVar(&debug, "debug", false, "debug mode")
 	flag.Parse()
 
 	p := NewPersistor(data, ngconf)
@@ -34,12 +36,20 @@ func main() {
 		log.Fatalf("Cannot read frontend file from %s: %s", fend, err)
 	}
 
+	f := func() bool {
+		cmd := exec.Command("nginx", "-s", "reload")
+		return cmd.Run() == nil
+	}
+
+	if debug {
+		f = func() bool {
+			return true
+		}
+	}
+
 	h := Handler{
 		p,
-		func() bool {
-			cmd := exec.Command("nginx", "-s", "reload")
-			return cmd.Run() == nil
-		},
+		f,
 	}
 	http.HandleFunc("/api/list", h.List)
 	http.HandleFunc("/api/create", h.Create)

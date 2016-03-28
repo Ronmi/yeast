@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"sync"
 )
 
@@ -59,14 +58,7 @@ func (p *Persistor) doSave() (err error) {
 		return
 	}
 
-	if err = p.export(); err != nil {
-		return
-	}
-
-	cmd := exec.Command("nginx", "-s", "reload")
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	err = p.export()
 
 	return
 }
