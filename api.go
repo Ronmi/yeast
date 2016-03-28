@@ -27,8 +27,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf)
 }
 
-// Set add or overwrite a mapping data
-func (h *Handler) Set(w http.ResponseWriter, r *http.Request) {
+// Create add a mapping data
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	name := r.PostFormValue("name")
@@ -42,7 +42,12 @@ func (h *Handler) Set(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := h.Persistor.Set(name, path, upstream, custom)
+	data := h.Persistor.Create(name, path, upstream, custom)
+	if data == nil {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+
 	buf, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -59,8 +64,46 @@ func (h *Handler) Set(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf)
 }
 
-// Unset removes a existing mapping
-func (h *Handler) Unset(w http.ResponseWriter, r *http.Request) {
+// Modify a mapping data
+func (h *Handler) Modify(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	name := r.PostFormValue("name")
+	path := r.PostFormValue("path")
+	newPath := r.PostFormValue("new_path")
+	upstream := r.PostFormValue("upstream")
+	custom := r.PostFormValue("custom_tags")
+
+	if name == "" || path == "" || newPath == "" || upstream == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("you must pass at least name, path, new_path and upstream"))
+		return
+	}
+
+	data := h.Persistor.Modify(name, path, newPath, upstream, custom)
+	if data == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	buf, err := json.Marshal(data)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot serialize data to json format."))
+		return
+	}
+
+	if !h.ReloadNginx() {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot reload Nginx."))
+		return
+	}
+
+	w.Write(buf)
+}
+
+// Delete a existing mapping
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	name := r.PostFormValue("name")
@@ -72,7 +115,8 @@ func (h *Handler) Unset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.Persistor.Unset(name, path) {
+	data := h.Persistor.Delete(name, path)
+	if data == nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("No such data"))
 		return
@@ -84,6 +128,13 @@ func (h *Handler) Unset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	buf, err := json.Marshal(data)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Cannot serialize data to json format."))
+		return
+	}
+	w.Write(buf)
 }
 
 // Enable enables some of known data

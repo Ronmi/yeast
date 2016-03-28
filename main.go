@@ -42,8 +42,9 @@ func main() {
 		},
 	}
 	http.HandleFunc("/api/list", h.List)
-	http.HandleFunc("/api/set", h.Set)
-	http.HandleFunc("/api/unset", h.Unset)
+	http.HandleFunc("/api/create", h.Create)
+	http.HandleFunc("/api/modify", h.Modify)
+	http.HandleFunc("/api/delete", h.Delete)
 	http.HandleFunc("/api/enable", h.Enable)
 	http.HandleFunc("/api/disable", h.Disable)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
