@@ -45,20 +45,20 @@ func TestListEmpty(t *testing.T) {
 	}
 }
 
-func TestSetAndList(t *testing.T) {
+func TestCreateAndList(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test.server", "/test/", "http://upstream", "")
+	p.Create("test.server", "/test/", "http://upstream", "")
 	data := p.List()
 
 	if len(data) != 1 {
 		t.Fatalf("Created only one entry, but got %d", len(data))
 	}
 
-	actual := data[0]
-	if actual.ServerName != "test.server" {
-		t.Errorf("Server name %s differs from just created one", actual.ServerName)
+	actual, ok := data["test.server"]
+	if !ok {
+		t.Errorf("Server name differs from just created one")
 	}
 
 	mapping, ok := actual.Paths["/test/"]
@@ -79,12 +79,24 @@ func TestSetAndList(t *testing.T) {
 	}
 }
 
-func TestUnset(t *testing.T) {
+func TestModify(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test.server", "/test/", "http://upstream", "")
-	p.Unset("test.server", "/test/")
+	p.Create("test.server", "/test/", "http://upstream", "")
+	p.Modify("test.server", "/test/", "/orz/", "http://orz", "")
+	data := p.List()
+	if _, ok := data["test.server"].Paths["/orz/"]; !ok {
+		t.Error("Cannot find modified path")
+	}
+}
+
+func TestDelete(t *testing.T) {
+	p := cp(t)
+	defer dp(p)
+
+	p.Create("test.server", "/test/", "http://upstream", "")
+	p.Delete("test.server", "/test/")
 
 	data := p.List()
 	if len(data) != 0 {
@@ -96,11 +108,11 @@ func TestDisableOne(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test.server", "/test/", "http://upstream", "")
+	p.Create("test.server", "/test/", "http://upstream", "")
 	p.Disable("test.server", "/test/")
 
 	data := p.List()
-	if data[0].Paths["/test/"].Enabled {
+	if data["test.server"].Paths["/test/"].Enabled {
 		t.Error("Disable is not working")
 	}
 }
@@ -109,12 +121,12 @@ func TestEnableOne(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test.server", "/test/", "http://upstream", "")
+	p.Create("test.server", "/test/", "http://upstream", "")
 	p.Disable("test.server", "/test/")
 	p.Enable("test.server", "/test/")
 
 	data := p.List()
-	if !data[0].Paths["/test/"].Enabled {
+	if !data["test.server"].Paths["/test/"].Enabled {
 		t.Error("Enable is not working")
 	}
 }
@@ -123,13 +135,13 @@ func TestDisableServer(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test.server", "/test1/", "http://upstream", "")
-	p.Set("test.server", "/test2/", "http://upstream", "")
+	p.Create("test.server", "/test1/", "http://upstream", "")
+	p.Create("test.server", "/test2/", "http://upstream", "")
 	p.Disable("test.server", "")
 
 	data := p.List()
 	for _, path := range []string{"/test1/", "/test2/"} {
-		if data[0].Paths[path].Enabled {
+		if data["test.server"].Paths[path].Enabled {
 			t.Error("Disable server is not working")
 		}
 	}
@@ -139,14 +151,14 @@ func TestEnableServer(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test.server", "/test1/", "http://upstream", "")
-	p.Set("test.server", "/test2/", "http://upstream", "")
+	p.Create("test.server", "/test1/", "http://upstream", "")
+	p.Create("test.server", "/test2/", "http://upstream", "")
 	p.Disable("test.server", "")
 	p.Enable("test.server", "")
 
 	data := p.List()
 	for _, path := range []string{"/test1/", "/test2/"} {
-		if !data[0].Paths[path].Enabled {
+		if !data["test.server"].Paths[path].Enabled {
 			t.Error("Enable server is not working")
 		}
 	}
@@ -156,10 +168,10 @@ func TestDisableAll(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test1.server", "/test1/", "http://upstream", "")
-	p.Set("test1.server", "/test2/", "http://upstream", "")
-	p.Set("test2.server", "/test1/", "http://upstream", "")
-	p.Set("test2.server", "/test2/", "http://upstream", "")
+	p.Create("test1.server", "/test1/", "http://upstream", "")
+	p.Create("test1.server", "/test2/", "http://upstream", "")
+	p.Create("test2.server", "/test1/", "http://upstream", "")
+	p.Create("test2.server", "/test2/", "http://upstream", "")
 	p.Disable("", "")
 
 	data := p.List()
@@ -176,10 +188,10 @@ func TestEnableAll(t *testing.T) {
 	p := cp(t)
 	defer dp(p)
 
-	p.Set("test1.server", "/test1/", "http://upstream", "")
-	p.Set("test1.server", "/test2/", "http://upstream", "")
-	p.Set("test2.server", "/test1/", "http://upstream", "")
-	p.Set("test2.server", "/test2/", "http://upstream", "")
+	p.Create("test1.server", "/test1/", "http://upstream", "")
+	p.Create("test1.server", "/test2/", "http://upstream", "")
+	p.Create("test2.server", "/test1/", "http://upstream", "")
+	p.Create("test2.server", "/test2/", "http://upstream", "")
 	p.Disable("", "")
 	p.Enable("", "")
 

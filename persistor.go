@@ -122,33 +122,57 @@ func (p *Persistor) getServer(name string) *NginxServer {
 	return ret
 }
 
-// Set path to upstream mapping
-func (p *Persistor) Set(name, path, upstream, custom string) (ret *NginxServer) {
+// Create a path to upstream mapping
+func (p *Persistor) Create(name, path, upstream, custom string) (ret *NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
 
-	return p.getServer(name).Set(path, upstream, custom)
+	srv := p.getServer(name)
+	if srv.Create(path, upstream, custom) {
+		ret = srv
+	}
+
+	return
 }
 
-// Unset a path-upstream mapping
-func (p *Persistor) Unset(name, path string) (ok bool) {
+// Modify a path to upstream mapping
+func (p *Persistor) Modify(name, path, newPath, upstream, custom string) (ret *NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
 
-	s := p.getServer(name)
-	s.Unset(path)
+	srv := p.getServer(name)
+	if srv.Modify(path, newPath, upstream, custom) {
+		ret = srv
+	}
 
-	if s.Len() < 1 {
+	return
+}
+
+// Delete a path-upstream mapping
+func (p *Persistor) Delete(name, path string) (ret *NginxServer) {
+	p.Lock()
+	defer p.Unlock()
+	defer p.doSave()
+
+	if _, ok := p.servers[name]; !ok {
+		return
+	}
+
+	ret = p.getServer(name)
+	if !ret.Delete(path) {
+		return
+	}
+
+	if ret.Len() < 1 {
 		delete(p.servers, name)
-		ok = true
 	}
 	return
 }
 
 // Enable a mapping
-func (p *Persistor) Enable(name, path string) (ret []*NginxServer) {
+func (p *Persistor) Enable(name, path string) (ret map[string]*NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
@@ -157,11 +181,17 @@ func (p *Persistor) Enable(name, path string) (ret []*NginxServer) {
 		return p.enableAll()
 	}
 
+	var srv *NginxServer
 	if path == "" {
-		return []*NginxServer{p.enableServer(name)}
+		srv = p.enableServer(name)
+	} else {
+		srv = p.enableOne(name, path)
 	}
 
-	return []*NginxServer{p.enableOne(name, path)}
+	ret = map[string]*NginxServer{
+		srv.ServerName: srv,
+	}
+	return
 }
 
 func (p *Persistor) enableOne(name, path string) (ret *NginxServer) {
@@ -178,16 +208,17 @@ func (p *Persistor) enableServer(name string) (ret *NginxServer) {
 	return
 }
 
-func (p *Persistor) enableAll() (ret []*NginxServer) {
-	ret = make([]*NginxServer, 0, len(p.servers))
+func (p *Persistor) enableAll() (ret map[string]*NginxServer) {
+	ret = make(map[string]*NginxServer)
 	for name := range p.servers {
-		ret = append(ret, p.enableServer(name))
+		srv := p.enableServer(name)
+		ret[srv.ServerName] = srv
 	}
 	return
 }
 
 // Disable a mapping
-func (p *Persistor) Disable(name, path string) (ret []*NginxServer) {
+func (p *Persistor) Disable(name, path string) (ret map[string]*NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 	defer p.doSave()
@@ -196,11 +227,17 @@ func (p *Persistor) Disable(name, path string) (ret []*NginxServer) {
 		return p.disableAll()
 	}
 
+	var srv *NginxServer
 	if path == "" {
-		return []*NginxServer{p.disableServer(name)}
+		srv = p.disableServer(name)
+	} else {
+		srv = p.disableOne(name, path)
 	}
 
-	return []*NginxServer{p.disableOne(name, path)}
+	ret = map[string]*NginxServer{
+		srv.ServerName: srv,
+	}
+	return
 }
 
 func (p *Persistor) disableOne(name, path string) (ret *NginxServer) {
@@ -217,22 +254,23 @@ func (p *Persistor) disableServer(name string) (ret *NginxServer) {
 	return
 }
 
-func (p *Persistor) disableAll() (ret []*NginxServer) {
-	ret = make([]*NginxServer, 0, len(p.servers))
+func (p *Persistor) disableAll() (ret map[string]*NginxServer) {
+	ret = make(map[string]*NginxServer)
 	for name := range p.servers {
-		ret = append(ret, p.disableServer(name))
+		srv := p.disableServer(name)
+		ret[srv.ServerName] = srv
 	}
 	return
 }
 
 // List all server and mappings
-func (p *Persistor) List() (ret []*NginxServer) {
+func (p *Persistor) List() (ret map[string]*NginxServer) {
 	p.Lock()
 	defer p.Unlock()
 
-	ret = make([]*NginxServer, 0, len(p.servers))
+	ret = make(map[string]*NginxServer)
 	for _, srv := range p.servers {
-		ret = append(ret, srv)
+		ret[srv.ServerName] = srv
 	}
 	return
 }
