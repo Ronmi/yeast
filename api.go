@@ -78,8 +78,8 @@ func (h *Handler) Modify(w http.ResponseWriter, r *http.Request) {
 	name := r.PostFormValue("name")
 	path := r.PostFormValue("path")
 	newPath := r.PostFormValue("new_path")
-	upstream := r.PostFormValue("upstream")
-	custom := r.PostFormValue("custom_tags")
+	upstream := r.PostFormValue("new_upstream")
+	custom := r.PostFormValue("new_custom_tags")
 
 	if name == "" || path == "" || newPath == "" || upstream == "" {
 		w.WriteHeader(http.StatusBadRequest)
