@@ -83,7 +83,7 @@ func (h *Handler) Modify(w http.ResponseWriter, r *http.Request) {
 
 	if name == "" || path == "" || newPath == "" || upstream == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("you must pass at least name, path, new_path and upstream"))
+		w.Write([]byte("you must pass at least name, path, new_path and new_upstream"))
 		return
 	}
 
