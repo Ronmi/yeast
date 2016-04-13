@@ -146,10 +146,18 @@ func (s *NginxServer) Export() string {
 	ret.add("server {")
 	ret.indent("client_max_body_size 250m;", 1)
 
+	arr := strings.Split(s.ServerName, ":")
+	name := arr[0]
+	port := "80"
+	if len(arr) > 1 {
+		port = arr[1]
+	}
+
 	if s.ServerName == "" {
-		ret.indent("listen 80 default_server;", 1)
+		ret.indent("listen "+port+" default_server;", 1)
 	} else {
-		ret.indent("server_name "+s.ServerName+";", 1)
+		ret.indent("server_name "+name+";", 1)
+		ret.indent("listen "+port+";", 1)
 	}
 	ret.add("")
 
